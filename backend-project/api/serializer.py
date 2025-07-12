@@ -4,22 +4,24 @@ from rest_framework import serializers
 from api import models as api_models
 
 
-
+# CUSTOMER SERIALIZER (Customer)
 class CustomerSerializer(serializers.ModelSerializer):
     class Meta:
         model = api_models.Customer
-        fields = '_all_'
+        fields = '__all__'
 
 
 
+# INVOICE ITEM SERIALIZER (Items per invoice)
 class InvoiceItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = api_models.InvoiceItem
         fields = ['id', 'description', 'quantity', 'unit_price', 'total']
         read_only_fields = ['total']
+    
         
         
-        
+# INVOICE SERIALIZER (For Invoice)      
 class InvoiceSerializer(serializers.ModelSerializer):
     items = InvoiceItemSerializer(many=True) # Multiple existing items per invoice
     total_amount = serializers.SerializerMethodField()
@@ -28,6 +30,15 @@ class InvoiceSerializer(serializers.ModelSerializer):
         model = api_models.Invoice
         fields = ['id', 'customer', 'issue_date', 'due_date', 'status', 'created_at', 'items', 'total_amount']
         read_only_fields = ['created_at', 'total_amount']
+
+    # To get a much detailed nested data
+    def __init__(self, *args, **kwargs):
+        super(InvoiceSerializer, self).__init__(*args, **kwargs)
+        request = self.context.get("request")
+        if request and request.method == "POST":
+            self.Meta.depth = 0
+        else:
+            self.Meta.depth = 1
 
     # Compute total amount
     def get_total_amount(self, obj):
@@ -52,4 +63,12 @@ class InvoiceSerializer(serializers.ModelSerializer):
         for item_data in items_data:
             api_models.InvoiceItem.objects.create(invoice=invoice, **item_data)
         return invoice
+    
+    
+    
+# INVOICE STATUS SERIALIZER (To determine invoice status)
+class InvoiceStatusSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = api_models.Invoice
+        fields = ['status']
 

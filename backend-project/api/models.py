@@ -11,7 +11,7 @@ class Customer(models.Model):
     email = models.EmailField(unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
-    def _str_(self):
+    def __str__(self):
         return self.name
     
     
@@ -34,9 +34,9 @@ class Invoice(models.Model):
 
     def total_amount(self):
         return sum(item.total for item in self.items.all())
-
-    def _str_(self):
-        return self.status
+    
+    def __str__(self):
+        return '{} - {}'.format(self.id, self.status)
 
 
 
@@ -51,7 +51,7 @@ class InvoiceItem(models.Model):
     class Meta:
         verbose_name_plural = "Invoice-Items"
     
-    
+    # save method get for total price
     def save(self, *args, **kwargs):
         self.total = self.quantity * self.unit_price
         super().save(*args, **kwargs)
